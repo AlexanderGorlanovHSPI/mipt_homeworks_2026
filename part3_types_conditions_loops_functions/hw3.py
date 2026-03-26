@@ -32,6 +32,8 @@ DOT_SEPARATOR = "."
 COMMA_SEPARATOR = ","
 MINUS_SIGN = "-"
 
+MIN_MONTH = 1
+MAX_MONTH = 12
 MIN_DAY = 1
 FEBRUARY = 2
 LEAP_DAY_COUNT_IN_FEBRUARY = 29
@@ -114,7 +116,7 @@ def has_valid_date_parts_format(date_parts: list[str]) -> bool:
 
 
 def get_month_day_limit(month: int, year: int) -> int:
-    month_limit = DAYS_IN_MONTH[month - 1]
+    month_limit = DAYS_IN_MONTH[month - MIN_MONTH]
     if month == FEBRUARY and is_leap_year(year):
         return LEAP_DAY_COUNT_IN_FEBRUARY
     return month_limit
@@ -122,7 +124,7 @@ def get_month_day_limit(month: int, year: int) -> int:
 
 def has_valid_date_values(date_value: DateType) -> bool:
     day, month, year = date_value
-    if month < 1 or month > 12:
+    if month < MIN_MONTH or month > MAX_MONTH:
         return False
     return MIN_DAY <= day <= get_month_day_limit(month, year)
 
