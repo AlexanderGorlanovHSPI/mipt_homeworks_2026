@@ -45,9 +45,6 @@ YEAR_PART_LENGTH = 4
 CATEGORY_PARTS_COUNT = 2
 MAX_AMOUNT_PARTS = 2
 
-ZERO = 0
-ONE = 1
-
 INCOME_COMMAND = "income"
 COST_COMMAND = "cost"
 STATS_COMMAND = "stats"
@@ -287,7 +284,7 @@ def add_cost_to_categories(
     if not isinstance(raw_category, str):
         return
     target_category = extract_target_category_name(raw_category)
-    previous_amount = expenses_by_categories.get(target_category, float(ZERO))
+    previous_amount = expenses_by_categories.get(target_category, float(0))
     expenses_by_categories[target_category] = previous_amount + amount
 
 
@@ -322,7 +319,7 @@ def update_totals(
 
 
 def collect_statistics(report_date: DateType) -> tuple[list[float], CategoryTotalsType]:
-    totals = [float(ZERO), float(ZERO), float(ZERO)]
+    totals = [float(0), float(0), float(0)]
     expenses_by_categories: CategoryTotalsType = {}
     for transaction in financial_transactions_storage:
         if transaction:
@@ -381,7 +378,7 @@ def has_valid_amount_format(raw_amount: str) -> bool:
         return False
 
     normalized_amount = amount_without_sign.replace(COMMA_SEPARATOR, DOT_SEPARATOR)
-    if normalized_amount.count(DOT_SEPARATOR) > ONE:
+    if normalized_amount.count(DOT_SEPARATOR) > 1:
         return False
 
     amount_parts = normalized_amount.split(DOT_SEPARATOR)
