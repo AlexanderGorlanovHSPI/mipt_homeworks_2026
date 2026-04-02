@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+from typing import Any
 
 UNKNOWN_COMMAND_MSG = "Unknown command!"
 NONPOSITIVE_VALUE_MSG = "Value must be grater than zero!"
@@ -21,7 +22,7 @@ EXPENSE_CATEGORIES = {
 
 
 DateType = tuple[int, int, int]
-TransactionType = dict[str, object]
+TransactionType = dict[str, Any]
 CategoryTotalsType = dict[str, float]
 
 financial_transactions_storage: list[TransactionType] = []
