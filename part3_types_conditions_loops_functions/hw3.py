@@ -110,10 +110,12 @@ def has_valid_date_parts_format(date_parts: list[str]) -> bool:
         MONTH_PART_LENGTH,
         YEAR_PART_LENGTH,
     )
-    return all(
-        part.isdigit() and len(part) == part_length
-        for part, part_length in zip(date_parts, lengths, strict=True)
-    )
+    for part, part_length in zip(date_parts, lengths, strict=True):
+        if not part.isdigit():
+            return False
+        if len(part) != part_length:
+            return False
+    return True
 
 
 def get_month_day_limit(month: int, year: int) -> int:
@@ -163,10 +165,7 @@ def is_valid_category_name(category_name: str) -> bool:
         return False
 
     common_category, target_category = category_parts
-    return (
-        common_category in EXPENSE_CATEGORIES
-        and target_category in EXPENSE_CATEGORIES[common_category]
-    )
+    return common_category in EXPENSE_CATEGORIES and target_category in EXPENSE_CATEGORIES[common_category]
 
 
 def append_empty_transaction() -> None:
@@ -407,10 +406,7 @@ def process_income_command(command_parts: list[str]) -> str:
 
 
 def process_cost_command(command_parts: list[str]) -> str:
-    if (
-        len(command_parts) == COST_CATEGORIES_COMMAND_PARTS_COUNT
-        and command_parts[1] == COST_CATEGORIES_COMMAND
-    ):
+    if len(command_parts) == COST_CATEGORIES_COMMAND_PARTS_COUNT and command_parts[1] == COST_CATEGORIES_COMMAND:
         return cost_categories_handler()
 
     if len(command_parts) != COST_COMMAND_PARTS_COUNT:
