@@ -35,13 +35,12 @@ class FIFOPolicy(Policy[K]):
 
     def register_access(self, key: K) -> None:
         if key not in self._order:
-            self._order.append(key) 
+            self._order.append(key)
 
     def get_key_to_evict(self) -> K | None:
         if len(self._order) > self.capacity:
             return self._order[0]
-        else:
-            return None
+        return None
 
     def remove_key(self, key: K) -> None:
         if key in self._order:
@@ -61,17 +60,16 @@ class LRUPolicy(Policy[K]):
     _order: list[K] = field(default_factory=list, init=False)
 
     def register_access(self, key: K) -> None:
-        if key not in self._order:
-            self._order.append(key) 
-        else:
+        if key in self._order:
             self._order.remove(key)
             self._order.append(key)
+            return
+        self._order.append(key)
 
     def get_key_to_evict(self) -> K | None:
         if len(self._order) > self.capacity:
             return self._order[0]
-        else:
-            return None
+        return None
 
     def remove_key(self, key: K) -> None:
         if key in self._order:
@@ -92,35 +90,34 @@ class LFUPolicy(Policy[K]):
     _key_queue: list[K] = field(default_factory=list, init=False)
 
     def register_access(self, key: K) -> None:
-        if key not in self._key_counter:
-            self._key_counter[key] = 1
-            self._key_queue.append(key)
-        else:
-            self._key_counter[key] += 1
+        key_count = self._key_counter.get(key)
+        if key_count is not None:
+            self._key_counter[key] = key_count + 1
             if key in self._key_queue:
                 self._key_queue.remove(key)
             self._key_queue.append(key)
+            return
+        self._key_counter[key] = 1
+        self._key_queue.append(key)
 
     def get_key_to_evict(self) -> K | None:
         if len(self._key_counter) > self.capacity:
-            _key_counter_without_first = self._key_counter.copy()
-            del _key_counter_without_first[self._key_queue[-1]]
+            key_counter_without_last = self._key_counter.copy()
+            key_counter_without_last.pop(self._key_queue[-1], None)
+            if not key_counter_without_last:
+                return None
 
-            min_count = min(_key_counter_without_first.values())
+            min_count = min(key_counter_without_last.values())
             for key in self._key_queue:
                 if self._key_counter[key] == min_count:
                     return key
-            return 
-                
-        else:
             return None
-
+        return None
 
     def remove_key(self, key: K) -> None:
-        if key in self._key_counter:
-            del self._key_counter[key]
-            if key in self._key_queue:
-                self._key_queue.remove(key)
+        self._key_counter.pop(key, None)
+        if key in self._key_queue:
+            self._key_queue.remove(key)
 
     def clear(self) -> None:
         self._key_counter.clear()
@@ -149,7 +146,6 @@ class MIPTCache(Cache[K, V]):
             self.policy.register_access(key)
         return self.storage.get(key)
 
-
     def exists(self, key: K) -> bool:
         return self.storage.exists(key)
 
@@ -166,10 +162,13 @@ class CachedProperty[V]:
     def __init__(self, func: Callable[..., V]) -> None:
         self._function = func
         self._cache_key = func.__name__
+
     def __get__(self, instance: HasCache[Any, Any] | None, owner: type) -> V:
+        if instance is None:
+            return self  # type: ignore[return-value]
         if instance.cache.exists(self._cache_key):
             return instance.cache.get(self._cache_key)  # type: ignore[return-value]
-        
+
         value = self._function(instance)
         instance.cache.set(self._cache_key, value)
         return value
