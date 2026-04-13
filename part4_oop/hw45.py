@@ -100,8 +100,7 @@ class LFUPolicy(Policy[K]):
             if not eviction_candidates:
                 return None
 
-            min_count = min(eviction_candidates, key=lambda key: self._key_counter[key])
-            return min_count
+            return min(eviction_candidates, key=lambda key: self._key_counter[key])
         return None
 
     def remove_key(self, key: K) -> None:
@@ -153,7 +152,7 @@ class CachedProperty[V]:
         self._function = func
         self._cache_key = func.__name__
 
-    def __get__(self, instance: HasCache[Any, Any] | None, owner: type) -> V | "CachedProperty[V]":
+    def __get__(self, instance: HasCache[Any, Any] | None, owner: type) -> V | Self:
         if instance is None:
             return self
         if instance.cache.exists(self._cache_key):
