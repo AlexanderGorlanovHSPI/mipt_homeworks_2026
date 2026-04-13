@@ -87,41 +87,31 @@ class LRUPolicy(Policy[K]):
 class LFUPolicy(Policy[K]):
     capacity: int = 5
     _key_counter: dict[K, int] = field(default_factory=dict, init=False)
-    _key_queue: list[K] = field(default_factory=list, init=False)
+    _last_registered_key: K | None = field(default=None, init=False)
 
     def register_access(self, key: K) -> None:
-        key_count = self._key_counter.get(key)
-        if key_count is not None:
-            self._key_counter[key] = key_count + 1
-            if key in self._key_queue:
-                self._key_queue.remove(key)
-            self._key_queue.append(key)
-            return
-        self._key_counter[key] = 1
-        self._key_queue.append(key)
+        self._key_counter[key] = self._key_counter.get(key, 0) + 1
+        self._last_registered_key = key
 
     def get_key_to_evict(self) -> K | None:
         if len(self._key_counter) > self.capacity:
-            key_counter_without_last = self._key_counter.copy()
-            key_counter_without_last.pop(self._key_queue[-1], None)
-            if not key_counter_without_last:
+            eviction_candidates = [key for key in self._key_counter if key != self._last_registered_key]
+
+            if not eviction_candidates:
                 return None
 
-            min_count = min(key_counter_without_last.values())
-            for key in self._key_queue:
-                if self._key_counter[key] == min_count:
-                    return key
-            return None
+            min_count = min(eviction_candidates, key=lambda key: self._key_counter[key])
+            return min_count
         return None
 
     def remove_key(self, key: K) -> None:
         self._key_counter.pop(key, None)
-        if key in self._key_queue:
-            self._key_queue.remove(key)
+        if self._last_registered_key == key:
+            self._last_registered_key = None
 
     def clear(self) -> None:
         self._key_counter.clear()
-        self._key_queue.clear()
+        self._last_registered_key = None
 
     @property
     def has_keys(self) -> bool:
@@ -163,9 +153,9 @@ class CachedProperty[V]:
         self._function = func
         self._cache_key = func.__name__
 
-    def __get__(self, instance: HasCache[Any, Any] | None, owner: type) -> V:
+    def __get__(self, instance: HasCache[Any, Any] | None, owner: type) -> V | "CachedProperty[V]":
         if instance is None:
-            return self  # type: ignore[return-value]
+            return self
         if instance.cache.exists(self._cache_key):
             return instance.cache.get(self._cache_key)  # type: ignore[return-value]
 
