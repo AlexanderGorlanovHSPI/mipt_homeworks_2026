@@ -1,6 +1,6 @@
 from collections.abc import Callable
 from dataclasses import dataclass, field
-from typing import Any, TypeVar, Self
+from typing import Any, Self, TypeVar
 
 from part4_oop.interfaces import Cache, HasCache, Policy, Storage
 
