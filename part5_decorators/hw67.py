@@ -73,15 +73,11 @@ class CircuitBreaker:
     ) -> list[ValueError]:
         errors: list[ValueError] = []
         critical_is_valid_type = isinstance(critical_count, int) and not isinstance(critical_count, bool)
-        if not critical_is_valid_type:
-            errors.append(ValueError(INVALID_CRITICAL_COUNT))
-        elif cast(int, critical_count) <= 0:
+        if (not critical_is_valid_type) or (cast("int", critical_count) <= 0):
             errors.append(ValueError(INVALID_CRITICAL_COUNT))
 
         recover_is_valid_type = isinstance(time_to_recover, int) and not isinstance(time_to_recover, bool)
-        if not recover_is_valid_type:
-            errors.append(ValueError(INVALID_RECOVERY_TIME))
-        elif cast(int, time_to_recover) <= 0:
+        if (not recover_is_valid_type) or (cast("int", time_to_recover) <= 0):
             errors.append(ValueError(INVALID_RECOVERY_TIME))
         return errors
 
