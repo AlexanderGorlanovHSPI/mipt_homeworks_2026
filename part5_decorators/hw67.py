@@ -1,8 +1,8 @@
 import json
-from typing import Any, ParamSpec, Protocol, TypeVar
-from urllib.request import urlopen
 from datetime import UTC, datetime, timedelta
 from functools import wraps
+from typing import Any, ParamSpec, Protocol, TypeVar
+from urllib.request import urlopen
 
 INVALID_CRITICAL_COUNT = "Breaker count must be positive integer!"
 INVALID_RECOVERY_TIME = "Breaker recovery time must be positive integer!"
@@ -39,7 +39,7 @@ class CircuitBreaker:
 
         if ((not isinstance(critical_count, int)) or isinstance(critical_count, bool)) or critical_count <= 0:
             errors.append(ValueError(INVALID_CRITICAL_COUNT))
-        
+
         if ((not isinstance(time_to_recover, int)) or isinstance(time_to_recover, bool)) or time_to_recover <= 0:
             errors.append(ValueError(INVALID_RECOVERY_TIME))
 
@@ -51,8 +51,8 @@ class CircuitBreaker:
         self.triggers_on = triggers_on
 
         self.failure_count = 0
-        self.blocked_until = None
-        self.block_time = None
+        self.blocked_until: datetime | None = None
+        self.block_time: datetime | None = None
 
     def __call__(self, func: CallableWithMeta[P, R_co]) -> CallableWithMeta[P, R_co]:
         @wraps(func)
@@ -60,14 +60,15 @@ class CircuitBreaker:
             now = datetime.now(UTC)
             function_name = f"{func.__module__}.{func.__name__}"
 
-            if self.blocked_until and now < self.blocked_until:
-                raise BreakerError(function_name, self.block_time)
-            
-            if self.blocked_until and now >= self.blocked_until:
+            if self.blocked_until is not None and now < self.blocked_until:
+                block_time = self.block_time if self.block_time is not None else now
+                raise BreakerError(function_name, block_time)
+
+            if self.blocked_until is not None and now >= self.blocked_until:
                 self.failure_count = 0
                 self.blocked_until = None
                 self.block_time = None
-            
+
             try:
                 result = func(*args, **kwargs)
             except Exception as e:
@@ -75,9 +76,10 @@ class CircuitBreaker:
                     self.failure_count += 1
 
                     if self.failure_count >= self.critical_count:
-                        self.block_time = now
-                        self.blocked_until = now + timedelta(seconds=self.time_to_recover)
-                        raise BreakerError(function_name, self.block_time) from e
+                        block_time = now
+                        self.block_time = block_time
+                        self.blocked_until = block_time + timedelta(seconds=self.time_to_recover)
+                        raise BreakerError(function_name, block_time) from e
                 raise
             else:
                 self.failure_count = 0
