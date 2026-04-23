@@ -6,6 +6,7 @@ from urllib.request import urlopen
 
 INVALID_CRITICAL_COUNT = "Breaker count must be positive integer!"
 INVALID_RECOVERY_TIME = "Breaker recovery time must be positive integer!"
+INVALID_TRIGGERS_ON = "triggers exeptions must be Exeptions!"
 VALIDATIONS_FAILED = "Invalid decorator args."
 TOO_MUCH = "Too much requests, just wait."
 
@@ -35,7 +36,7 @@ class CircuitBreaker:
         time_to_recover: int = 30,
         triggers_on: type[Exception] = Exception,
     ):
-        errors = self._validate_args(critical_count, time_to_recover)
+        errors = self._validate_args(critical_count, time_to_recover, triggers_on)
 
         if errors:
             raise ExceptionGroup(VALIDATIONS_FAILED, errors)
@@ -58,7 +59,8 @@ class CircuitBreaker:
             try:
                 result = func(*args, **kwargs)
             except Exception as error:
-                self._handle_failure(error, now, function_name)
+                if isinstance(error, self.triggers_on):
+                    self._handle_failure(error, now, function_name)
                 raise
 
             self._reset_breaker()
@@ -70,15 +72,21 @@ class CircuitBreaker:
         self,
         critical_count: object,
         time_to_recover: object,
+        triggers_on: object,
     ) -> list[ValueError]:
         errors: list[ValueError] = []
-        critical_is_valid_type = isinstance(critical_count, int) and not isinstance(critical_count, bool)
-        if (not critical_is_valid_type) or (cast("int", critical_count) <= 0):
+        critical_is_valid_type = isinstance(critical_count, int)
+        if (not critical_is_valid_type) or (critical_count <= 0):
             errors.append(ValueError(INVALID_CRITICAL_COUNT))
 
-        recover_is_valid_type = isinstance(time_to_recover, int) and not isinstance(time_to_recover, bool)
-        if (not recover_is_valid_type) or (cast("int", time_to_recover) <= 0):
+        recover_is_valid_type = isinstance(time_to_recover, int)
+        if (not recover_is_valid_type) or (time_to_recover <= 0):
             errors.append(ValueError(INVALID_RECOVERY_TIME))
+
+        triggers_on_is_valid_type = isinstance(triggers_on, Exception)
+        if not triggers_on_is_valid_type:
+            errors.append(ValueError(INVALID_TRIGGERS_ON))
+
         return errors
 
     def _check_block_state(self, now: datetime, function_name: str) -> None:
@@ -92,12 +100,11 @@ class CircuitBreaker:
         self._reset_breaker()
 
     def _handle_failure(self, error: Exception, now: datetime, function_name: str) -> None:
-        if isinstance(error, self.triggers_on):
-            self.failure_count += 1
-            if self.failure_count >= self.critical_count:
-                self.block_time = now
-                self.blocked_until = now + timedelta(seconds=self.time_to_recover)
-                raise BreakerError(function_name, now) from error
+        self.failure_count += 1
+        if self.failure_count >= self.critical_count:
+            self.block_time = now
+            self.blocked_until = now + timedelta(seconds=self.time_to_recover)
+            raise BreakerError(function_name, now) from error
 
     def _reset_breaker(self) -> None:
         self.failure_count = 0
