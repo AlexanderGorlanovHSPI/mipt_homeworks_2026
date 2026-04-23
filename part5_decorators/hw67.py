@@ -83,7 +83,7 @@ class CircuitBreaker:
         if (not recover_is_valid_type) or (cast("int", time_to_recover) <= 0):
             errors.append(ValueError(INVALID_RECOVERY_TIME))
 
-        triggers_on_is_valid_type = issubclass(triggers_on, Exception)
+        triggers_on_is_valid_type = isinstance(triggers_on, type) and issubclass(triggers_on, Exception)
         if not triggers_on_is_valid_type:
             errors.append(ValueError(INVALID_TRIGGERS_ON))
 
