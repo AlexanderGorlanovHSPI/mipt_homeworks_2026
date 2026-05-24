@@ -1,12 +1,95 @@
-# Итоговый проект "GigaVibeMiptCode"
+# Описание проекта
 
-Актуальный текст задания доступен [здесь](https://docs.google.com/document/d/1hjEwsQd8m6-esJA37ZkGNIwK9Rn2edBC0MozFxpqxRg/edit?usp=sharing).
+Консольный ИИ-ассистент для общения с LLM через OpenAI-compatible API.
 
-**Дедлайн загрузки решений: 23:59 22 мая.**
+## Что умеет
 
-В рамках проекта вам предстоит создать собственного ИИ-ассистента с консольным интерфейсом, который будет обрабатывать пользовательский ввод, отправлять запросы к LLM и выводить пользователю ответы в разных режимах.
+- чатиться с LLM;
+- хранить историю сообщений;
+- ограничивать контекст по числу сообщений и символов;
+- читать настройки из `.env`, переменных окружения и `config.yaml`;
+- прикреплять текстовые файлы через `@::path::`;
+- обрабатывать файл по частям через `/filechunk`;
+- очищать историю через `/reset`;
+- выходить по `\q`.
 
-Решения необходимо подгрузить в форки данного репозитория.
+## Установка
 
-Требования к линтерам смягчены: используйте ruff check с конфигурацией из нового ruff.toml
-Проверку типов выполняем через простой запуск mypy.
+```bash
+cd final_project
+python3.12 -m venv .venv
+.venv/bin/python -m pip install -r requirements.txt
+```
+
+Для проверок:
+
+```bash
+.venv/bin/python -m pip install -r requirements-dev.txt
+```
+
+## Конфигурация
+
+Можно использовать `.env`:
+
+```bash
+cp .env.example .env
+```
+
+Пример:
+
+```env
+API_KEY=ollama
+API_HOST=http://localhost:11434/v1/
+MODEL=gemma3:270m
+LIMIT_MESSAGE=20
+LIMIT_CHARS=2000
+TEMPERATURE=0.5
+```
+
+Также можно использовать `config.yaml`. Переменные окружения и `.env` имеют
+приоритет над `config.yaml`.
+
+`system_prompt` задается в `config.yaml`.
+
+## Запуск
+
+```bash
+.venv/bin/python main.py
+```
+
+## Команды
+
+```text
+\q
+```
+
+Выйти из программы.
+
+```text
+/reset
+```
+
+Очистить историю чата и экран.
+
+```text
+@::/path/to/file.py::
+```
+
+Подставить содержимое текстового файла в сообщение. Максимальный размер файла:
+`5 MB`.
+
+```text
+/filechunk
+/filechunk paragraph=3
+/filechunk len=150
+/filechunk paragraph=3 -y
+```
+
+Обработать файл по частям. Флаг `-y` запускает обработку всех чанков подряд.
+
+## Проверки
+
+```bash
+.venv/bin/ruff check --config ruff.toml .
+.venv/bin/mypy .
+```
