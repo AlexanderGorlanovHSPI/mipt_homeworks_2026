@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from pathlib import Path
 
-from gigavibe.llm_client import LLMClient
+from gigavibe.llm.client import LLMClient
 
 
 @dataclass

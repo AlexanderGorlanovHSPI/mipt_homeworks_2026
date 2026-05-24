@@ -6,8 +6,8 @@ from openai.types.chat import (
     ChatCompletionUserMessageParam,
 )
 
-from gigavibe.config import Config
-from gigavibe.models import Message
+from gigavibe.core.models import Message
+from gigavibe.settings.config import Config
 
 
 class LLMError(Exception):

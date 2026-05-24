@@ -3,6 +3,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 import yaml
+from dotenv import load_dotenv
 
 
 @dataclass
@@ -90,6 +91,8 @@ def require_str(value: object, name: str) -> str:
 def load_config(path: Path | None = None) -> Config:
     if path is None:
         path = Path('config.yaml')
+
+    load_dotenv(path.with_name('.env'))
 
     yaml_config = load_yaml_config(path)
 

@@ -1,5 +1,5 @@
 from gigavibe.app import run
-from gigavibe.config import ConfigError
+from gigavibe.settings.config import ConfigError
 
 
 if __name__ == '__main__':

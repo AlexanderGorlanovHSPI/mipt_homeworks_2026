@@ -1,4 +1,4 @@
-from gigavibe.models import Message
+from gigavibe.core.models import Message
 
 
 class ChatHistory:

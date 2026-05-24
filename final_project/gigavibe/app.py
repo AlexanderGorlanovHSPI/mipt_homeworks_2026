@@ -1,9 +1,9 @@
-from gigavibe.config import load_config
-from gigavibe.console import clear_screen
-from gigavibe.file_chunks import FileChunkError, run_file_chunk_mode
-from gigavibe.file_mentions import FileMentionError, expand_file_mentions
-from gigavibe.history import ChatHistory
-from gigavibe.llm_client import LLMClient, LLMError
+from gigavibe.core.history import ChatHistory
+from gigavibe.files.chunks import FileChunkError, run_file_chunk_mode
+from gigavibe.files.mentions import FileMentionError, expand_file_mentions
+from gigavibe.llm.client import LLMClient, LLMError
+from gigavibe.settings.config import load_config
+from gigavibe.ui.console import clear_screen
 
 
 def run() -> None:
