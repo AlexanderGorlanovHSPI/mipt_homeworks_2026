@@ -6,7 +6,7 @@ from openai.types.chat import (
     ChatCompletionUserMessageParam,
 )
 
-from gigavibe.core.models import Message
+from gigavibe.core.history import Message
 from gigavibe.settings.config import Config
 
 
